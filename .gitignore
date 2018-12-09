@@ -1,0 +1,23 @@
+
+.DS_Store
+addons.make
+bin/.DS_Store
+bin/.DS_Store
+bin/.DS_Store
+bin/data/.DS_Store
+bin/final3DDebug.app/Contents/Frameworks/libfmodex.dylib
+bin/final3DDebug.app/Contents/Info.plist
+bin/final3DDebug.app/Contents/MacOS/final3DDebug
+bin/final3DDebug.app/Contents/PkgInfo
+bin/final3DDebug.app/Contents/Resources/icon-debug.icns
+config.make
+final3D.xcodeproj/project.pbxproj
+final3D.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+final3D.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+final3D.xcodeproj/project.xcworkspace/xcuserdata/stephaniecheng.xcuserdatad/UserInterfaceState.xcuserstate
+final3D.xcodeproj/xcshareddata/xcschemes/final3D Debug.xcscheme
+final3D.xcodeproj/xcshareddata/xcschemes/final3D Release.xcscheme
+final3D.xcodeproj/xcuserdata/stephaniecheng.xcuserdatad/xcschemes/xcschememanagement.plist
+Makefile
+openFrameworks-Info.plist
+Project.xcconfig
