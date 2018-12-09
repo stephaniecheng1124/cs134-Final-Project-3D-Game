@@ -17,7 +17,10 @@
 // setup scene, lighting, state and load geometry
 //
 void ofApp::setup(){
-
+    
+    //Stephanie
+    gui.setup();
+    gui.add(gravity.setup("Gravity", 0, 0, 2));
 
 	bWireframe = false;
 	bDisplayPoints = false;
@@ -93,7 +96,7 @@ void ofApp::setup(){
     
     //Create Forces
     turbForce = new TurbulenceForce(ofVec3f(0, 0, 0), ofVec3f(0, 0, 0));
-    gravityForce = new GravityForce(ofVec3f(0, 0, 0));
+    gravityForce = new GravityForce(ofVec3f(0, -gravity, 0));  //Stephanie changed for slider
     thrustForceLunar = new ThrustForce(ofVec3f(0, 0, 0));
     
     //Add Forces
@@ -142,6 +145,11 @@ void ofApp::setup(){
 
 
 void ofApp::update() {
+    
+    // live update of forces  (with sliders)  Stephanie
+    //
+    gravityForce->set(ofVec3f(0, -gravity, 0));
+    
     //Update both emitters
     emitter.sys -> update();
     if (emitter.sys -> particles.size() > 0) {
@@ -166,8 +174,12 @@ void ofApp::draw() {
 		ofEnableDepthTest();
 		ofPopMatrix();
 	}
+    
+    
 
 	theCam->begin();
+    
+   
     
     //Draw the particles
     engineEmitter.sys -> draw();
@@ -213,15 +225,22 @@ void ofApp::draw() {
     //emitter.draw();
 	//emitter.sys -> draw();
     
+    
+    
 	ofPopMatrix();
+    
+    ofDisableDepthTest();
 	theCam->end();
 
+    gui.draw();
 	// draw screen data
 	//
 	string str;
 	str += "Frame Rate: " + std::to_string(ofGetFrameRate());
 	ofSetColor(ofColor::white);
 	ofDrawBitmapString(str, ofGetWindowWidth() - 170, 15);
+    
+    
 
 }
 

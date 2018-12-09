@@ -10,6 +10,7 @@
 
 #include "ofMain.h"
 #include  "ofxAssimpModelLoader.h"
+#include  "ofxGui.h"
 #include "ParticleSystem.h"
 #include "ParticleEmitter.h"
 #include "box.h"
@@ -87,6 +88,11 @@ class ofApp : public ofBaseApp{
         TurbulenceForce* turbForce2;
         GravityForce* gravityForce2;
         ThrustForce* thrustForceLunar2;
+    
+        //GUI
+        ofxPanel gui;
+        ofxFloatSlider gravity;
+        //ofxFloatSlider restitution;
 	
 
 };
