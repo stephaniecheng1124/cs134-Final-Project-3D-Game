@@ -65,16 +65,18 @@ void ofApp::setup(){
 	//
 	initLightingAndMaterials();
     
-    
-    mars.loadModel("geo/mars-low-v2.obj");            //Stephanie
+    //mars.loadModel("geo/mars-low-v2.obj");
+    mars.loadModel("geo/terrain5.obj");            //Stephanie
     mars.setScaleNormalization(false);
-    boundingBox = meshBounds(mars.getMesh(0), 1);
+    mars.setScale(.025, .025, .025);
+    boundingBox = meshBounds(mars.getMesh(0), 0.25);
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
     //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
     myTree.create(mars.getMesh(0), 8);
     
     //Turn the mesh over                              //Stephanie
+    
     mars.setRotation(0, 180, 0, 0, 1);
 
 	// load lander model
