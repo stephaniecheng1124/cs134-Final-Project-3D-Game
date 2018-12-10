@@ -41,6 +41,7 @@ class ofApp : public ofBaseApp{
 		void savePicture();
 		void toggleWireframeMode();
 		void togglePointsDisplay();
+        void checkCollision();
     
     void toggleSelectTerrain();
     void setCameraTarget();
@@ -58,11 +59,15 @@ class ofApp : public ofBaseApp{
     bool bPointSelected;
     bool bRoverLoaded;
     bool bTerrainSelected;
+    bool bCollision;
     
     ofVec3f selectedPoint;
     ofVec3f intersectPoint;
+    ofVec3f contactPoint; //Stephanie
     Octree myTree;
     TreeNode selectedNode;
+    
+    
     
     const float selectionRange = 4.0;
 
@@ -83,6 +88,7 @@ class ofApp : public ofBaseApp{
     
         ParticleEmitter emitter;
         ParticleEmitter engineEmitter;
+        ParticleEmitter engineEmitter2;
         TurbulenceForce* turbForce;
         GravityForce* gravityForce;
         ThrustForce* thrustForceLunar;

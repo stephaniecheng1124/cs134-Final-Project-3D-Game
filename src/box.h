@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "vector3.h"
 #include "ray.h"
+#include "Util.h"
 
 /*
  * Axis-aligned bounding box class, for use with the optimized ray-box
@@ -26,6 +27,8 @@ class Box {
     
     // (t0, t1) is the interval for valid hits
     bool intersect(const Ray &, float t0, float t1) const;
+    
+    
 
     // corners
     Vector3 parameters[2];
@@ -49,10 +52,30 @@ class Box {
 		return allInside;
 	}
     
+    bool pointInside(ofVec3f v) {
+        float maxX = max().x(); // std::max(max().x(), min().x());
+        float maxY = max().y(); // std::max(max().y(), min().y());
+        float maxZ = max().z(); // std::max(max().z(), min().z());
+        float minX = min().x(); // std::min(max().x(), min().x());
+        float minY = min().y(); // std::min(max().y(), min().y());
+        float minZ = min().z(); // std::min(max().z(), min().z());
+        
+        return (v.x > minX && v.y > minY && v.z > minZ &&
+                v.x < maxX && v.y < maxY && v.z < maxZ);
+    }
+    
+    
     //Get the center of the box
 	Vector3 center() {
 		return ((max() - min()) / 2 + min());
 	}
+    
+    //Stephanie
+    float height() {
+        return (max() - min()).y();
+    }
+    
+    
 };
 
 #endif // _BOX_H_

@@ -1,6 +1,7 @@
 #include "vector3.h"
 #include "ray.h"
 #include "box.h"
+#include "Util.h"
   
 /*
  * Ray-box intersection using IEEE numerical properties to ensure that the
@@ -35,3 +36,4 @@ bool Box::intersect(const Ray &r, float t0, float t1) const {
     tmax = tzmax;
   return ( (tmin < t1) && (tmax > t0) );
 }
+

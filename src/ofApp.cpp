@@ -30,6 +30,7 @@ void ofApp::setup(){
     
     bRoverLoaded = false;     //Stephanie
     bTerrainSelected = true;
+    bCollision = false;
     
 	cam.setDistance(10);
 	cam.setNearClip(.1);
@@ -71,23 +72,26 @@ void ofApp::setup(){
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
     //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
-    //myTree.create(mars.getMesh(0), 9);
+    myTree.create(mars.getMesh(0), 8);
     
     //Turn the mesh over                              //Stephanie
     mars.setRotation(0, 180, 0, 0, 1);
 
 	// load lander model
 	//
-	if (lander.loadModel("geo/Lamborghini_Aventador.obj")) {
+    
+    //lander.loadModel("geo/Lamborghini_Aventador.obj"
+    //lander.loadModel("geo/ship_assem_v3.obj")
+    
+	if (lander.loadModel("geo/ship_assem_v3.obj")) {
 		lander.setScaleNormalization(false);
         lander.setRotation(0, 180, 0, 0, 1);
         
         
-        
-		lander.setScale(.005, .005, .005);
-		//lander.setRotation(0, -180, 1, 0, 0);
-		lander.setPosition(0,0,0);
-        landerBox = meshBounds(lander.getMesh(0), 0.005);
+		lander.setScale(.03, .03, .03);
+		
+		lander.setPosition(0,1,0);
+        landerBox = meshBounds(lander.getMesh(0), .03);
 		bLanderLoaded = true;
         
         cout << "num vert: " << lander.getMesh(0).getNumVertices() << endl;
@@ -112,6 +116,7 @@ void ofApp::setup(){
     emitter.sys->addForce(turbForce);
     emitter.sys->addForce(gravityForce);
     emitter.sys->addForce(thrustForceLunar);
+    emitter.setPosition(lander.getPosition());
     
     //Emitter settings
     emitter.setVelocity(ofVec3f(0, 0, 0));
@@ -121,12 +126,12 @@ void ofApp::setup(){
     emitter.setLifespan(100000);
     
     
-    //////////////////////////////////Set up emitter 2///////////////////////////////////
+    //////////////////////////////////Set up emitter 2 & 3///////////////////////////////////
     
     //Create Forces
     turbForce2 = new TurbulenceForce(ofVec3f(-3, -3, -3), ofVec3f(3, 3, 3));
     gravityForce2 = new GravityForce(ofVec3f(0, 0, 0));
-    thrustForceLunar2 = new ThrustForce(ofVec3f(0, -10, 0));
+    thrustForceLunar2 = new ThrustForce(ofVec3f(10, 0, 0));
     
     //Add forces to emitter2
     engineEmitter.sys->addForce(turbForce2);
@@ -136,13 +141,27 @@ void ofApp::setup(){
     //Emitter2 settings
     engineEmitter.setVelocity(ofVec3f(0, 0, 0));
     engineEmitter.setOneShot(true);
-    engineEmitter.setGroupSize(40);
+    engineEmitter.setGroupSize(30);
     engineEmitter.setRandomLife(true);
-    engineEmitter.setLifespanRange(ofVec2f(0.5, 1));
-    engineEmitter.setPosition(lander.getPosition());
+    engineEmitter.setLifespanRange(ofVec2f(0.5, 0.8));
+    engineEmitter.setPosition(lander.getPosition() + ofVec3f(1.25, -0.8,0.4));
     //cout << "POS: " << lander.getPosition() << endl;
     engineEmitter.setEmitterType(DiscEmitter);
     
+    
+    //Add forces to emitter2 -Stephanie
+    engineEmitter2.sys->addForce(turbForce2);
+    engineEmitter2.sys->addForce(gravityForce2);
+    engineEmitter2.sys->addForce(thrustForceLunar2);
+    
+    //Emitter3 settings -Stephanie
+    engineEmitter2.setVelocity(ofVec3f(0, 0, 0));
+    engineEmitter2.setOneShot(true);
+    engineEmitter2.setGroupSize(30);
+    engineEmitter2.setRandomLife(true);
+    engineEmitter2.setLifespanRange(ofVec2f(0.5, 0.8));
+    engineEmitter2.setPosition(lander.getPosition() + ofVec3f(1.25, -0.8,-0.4));
+    engineEmitter2.setEmitterType(DiscEmitter);
     
     ///////////////////////////////////Spawn particle////////////////////////////////////
     
@@ -164,8 +183,18 @@ void ofApp::update() {
     if (emitter.sys -> particles.size() > 0) {
         lander.setPosition(emitter.sys -> particles[0].position.x,emitter.sys -> particles[0].position.y,emitter.sys -> particles[0].position.z);
     }
-    engineEmitter.setPosition(lander.getPosition()); //Attach emitter to lander and follow it
+    engineEmitter.setPosition(lander.getPosition()+ ofVec3f(1.25, -0.8,0.4)); //Attach emitter to thruster and follow it
     engineEmitter.update();
+    
+    engineEmitter2.setPosition(lander.getPosition()+ ofVec3f(1.25, -0.8,-0.4)); //Attach emitter2 to thruster2 and follow it
+    engineEmitter2.update();
+    
+    
+    //only check if the lander is moving downwards   --Stephanie
+    if (emitter.sys->particles[0].velocity.y < 0) {
+        checkCollision();
+    }
+    
     
 }
 
@@ -192,6 +221,7 @@ void ofApp::draw() {
     
     //Draw the particles
     engineEmitter.sys -> draw();
+    engineEmitter2.sys -> draw();
     //emitter.sys -> draw();
     
 	ofPushMatrix();
@@ -352,6 +382,8 @@ void ofApp::keyPressed(int key) {
         }
         engineEmitter.sys->reset();
         engineEmitter.start();
+        engineEmitter2.sys->reset();
+        engineEmitter2.start();
 		break;
 	case OF_KEY_DOWN:
         emitter.sys->reset();
@@ -364,6 +396,8 @@ void ofApp::keyPressed(int key) {
         }
         engineEmitter.sys->reset();
         engineEmitter.start();
+        engineEmitter2.sys->reset();
+        engineEmitter2.start();
 		break;
     case 'z':
     case OF_KEY_CONTROL:
@@ -375,6 +409,8 @@ void ofApp::keyPressed(int key) {
         turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
         engineEmitter.sys->reset();
         engineEmitter.start();
+        engineEmitter2.sys->reset();
+        engineEmitter2.start();
 		break;
 	case OF_KEY_RIGHT:
         emitter.sys->reset();
@@ -382,6 +418,8 @@ void ofApp::keyPressed(int key) {
         turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
         engineEmitter.sys->reset();
         engineEmitter.start();
+        engineEmitter2.sys->reset();
+        engineEmitter2.start();
 		break;
 	default:
 		break;
@@ -462,6 +500,26 @@ void ofApp::mousePressed(int x, int y, int button) {
     //if (level3[1].intersect(ray, -1000, 1000)) cout << "intersects" << endl;
 }
 
+//--------------------------------------------------------------
+
+
+//Used professor Smith's example ------------------- Stephanie
+void ofApp::checkCollision() {
+    Vector3 center = landerBox.center();
+    contactPoint = ofVec3f(center.x(), center.y() - landerBox.height()/2, center.z()) + lander.getPosition();
+    ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
+    if (vel.y > 0) return;
+    
+    TreeNode node;
+    myTree.pointIntersect(contactPoint, myTree.root, node);
+    if (node.points.size() > 0) {
+        bCollision = true;
+        cout << "Intersects!!!!!" << endl;
+        //contactPoint = mars.getMesh(0).getVertex(node.points[0]);
+    }
+    
+}
+
 
 //draw a box from a "Box" class
 //
@@ -478,7 +536,7 @@ void ofApp::drawBox(const Box &box) {
 }
 
 
-//draw a moving box from a "Box" class //Stephanie
+//draw a moving box from a "Box" class //-------------Stephanie
 //
 void ofApp::drawMovingBox(const Box &box, const ofVec3f &offset) {
     Vector3 min = box.parameters[0];

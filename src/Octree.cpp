@@ -240,7 +240,29 @@ bool Octree::intersect(const Ray &ray, const TreeNode & node, TreeNode & nodeRtn
 
 }
 
-
+//Stephanie
+bool Octree::pointIntersect(ofVec3f &point,TreeNode & node, TreeNode & nodeRtn) {
+    
+    //See if the point intersects with the box
+    if (node.box.pointInside(point)) {
+        
+        //if it’s a leaf node, return it
+        if (node.children.size() == 0) {
+            nodeRtn = node;
+            return true;
+        }
+        else {
+            //Look deeper if it’s not a leaf node
+            for (int i = 0; i < node.children.size(); i++) {
+                pointIntersect(point, node.children[i], nodeRtn);
+            }
+        }
+    }
+    else {
+        return false;
+    }
+    
+}
 
 
 
