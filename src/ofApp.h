@@ -46,12 +46,14 @@ class ofApp : public ofBaseApp{
     void setCameraTarget();
     bool  doPointSelection();
     void drawBox(const Box &box);
-    Box meshBounds(const ofMesh &);
+    void drawMovingBox(const Box &box, const ofVec3f &offset);
+    Box meshBounds(const ofMesh &, float scale);
     void subDivideBox8(const Box &b, vector<Box> & boxList);
     
     bool mouseIntersectPlane(ofVec3f planePoint, ofVec3f planeNorm, ofVec3f &point);
     
     Box boundingBox;
+    Box landerBox;          //Stephanie
     ofxAssimpModelLoader mars, rover;
     bool bPointSelected;
     bool bRoverLoaded;

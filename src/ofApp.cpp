@@ -67,23 +67,32 @@ void ofApp::setup(){
     
     mars.loadModel("geo/mars-low-v2.obj");            //Stephanie
     mars.setScaleNormalization(false);
-    boundingBox = meshBounds(mars.getMesh(0));
+    boundingBox = meshBounds(mars.getMesh(0), 1);
+    cout << "num meshes land: " << mars.getMeshCount() << endl;
     
-    //Build the octree w/ 9 levels                    //Stephanie
-    myTree.create(mars.getMesh(0), 9);
+    //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
+    //myTree.create(mars.getMesh(0), 9);
     
     //Turn the mesh over                              //Stephanie
     mars.setRotation(0, 180, 0, 0, 1);
 
 	// load lander model
 	//
-	if (lander.loadModel("geo/lander.obj")) {
+	if (lander.loadModel("geo/Lamborghini_Aventador.obj")) {
 		lander.setScaleNormalization(false);
-		lander.setScale(.5, .5, .5);
-		lander.setRotation(0, -180, 1, 0, 0);
+        lander.setRotation(0, 180, 0, 0, 1);
+        
+        
+        
+		lander.setScale(.005, .005, .005);
+		//lander.setRotation(0, -180, 1, 0, 0);
 		lander.setPosition(0,0,0);
-
+        landerBox = meshBounds(lander.getMesh(0), 0.005);
 		bLanderLoaded = true;
+        
+        cout << "num vert: " << lander.getMesh(0).getNumVertices() << endl;
+        cout << "num lander meshes: " << lander.getMeshCount() << endl;
+        cout << "Mesh 0 name: " << lander.getMeshNames()[0] << endl;
 	}
 	else {
 		cout << "Error: Can't load model" << "geo/lander.obj" << endl;
@@ -183,12 +192,16 @@ void ofApp::draw() {
     
     //Draw the particles
     engineEmitter.sys -> draw();
+    //emitter.sys -> draw();
     
 	ofPushMatrix();
 	if (bWireframe) {                    // wireframe mode  (include axis)
 		ofDisableLighting();
 		ofSetColor(ofColor::slateGray);
+        //Causes frame drop
+        //mars.drawWireframe();
 		if (bLanderLoaded) {
+            
 			lander.drawWireframe();
 		}
         if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
@@ -206,7 +219,8 @@ void ofApp::draw() {
     if (bDisplayPoints) {                // display points as an option
         glPointSize(3);
         ofSetColor(ofColor::green);
-        mars.drawVertices();
+        //Causes frame drop
+        //mars.drawVertices();
     }
     
     // highlight selected point (draw sphere around selected point) ///////////////////////////////////
@@ -215,15 +229,20 @@ void ofApp::draw() {
         ofDrawSphere(selectedPoint, .1);
     }
     
+    // Draw the bounding boxes - Stephanie
+    ofNoFill();
+    ofSetColor(ofColor::white);
+    drawBox(boundingBox);
+    drawMovingBox(landerBox, lander.getPosition());
+    ofFill();  //important!!!! -Stephanie
+    
     //////////////Draw either the whole octree or only the leaf nodes///////////////
     //myTree.drawLeafNodes(myTree.root);
     //myTree.draw(myTree.root, myTree.numOfLevels, 1);
     ////////////////////////////////////////////////////////////////////////////////
     
     
-    //engineEmitter.draw();
-    //emitter.draw();
-	//emitter.sys -> draw();
+	
     
     
     
@@ -458,9 +477,24 @@ void ofApp::drawBox(const Box &box) {
     ofDrawBox(p, w, h, d);
 }
 
+
+//draw a moving box from a "Box" class //Stephanie
+//
+void ofApp::drawMovingBox(const Box &box, const ofVec3f &offset) {
+    Vector3 min = box.parameters[0];
+    Vector3 max = box.parameters[1];
+    Vector3 size = max - min;
+    Vector3 center = size / 2 + min;
+    ofVec3f p = ofVec3f(center.x() + offset.x, center.y() + offset.y, center.z() + offset.z);
+    float w = size.x();
+    float h = size.y();
+    float d = size.z();
+    ofDrawBox(p, w, h, d);
+}
+
 // return a Mesh Bounding Box for the entire Mesh
 //
-Box ofApp::meshBounds(const ofMesh & mesh) {
+Box ofApp::meshBounds(const ofMesh & mesh, float scale) {
     int n = mesh.getNumVertices();
     ofVec3f v = mesh.getVertex(0);
     ofVec3f max = v;
@@ -477,7 +511,8 @@ Box ofApp::meshBounds(const ofMesh & mesh) {
         if (v.z > max.z) max.z = v.z;
         else if (v.z < min.z) min.z = v.z;
     }
-    return Box(Vector3(min.x, min.y, min.z), Vector3(max.x, max.y, max.z));
+    //Stephanie -added scaling factor
+    return Box(Vector3(min.x, min.y, min.z)*scale , Vector3(max.x, max.y, max.z)*scale);
 }
 
 //  Subdivide a Box into eight(8) equal size boxes, return them in boxList;
