@@ -60,6 +60,25 @@ public:
     void updateForce(Particle *);
 };
 
+//Added a new type of force
+class ImpulseForce : public ParticleForce {
+public:
+    void set(const ofVec3f &dir) {force = dir;}
+    ImpulseForce() {
+        applyOnce = true;
+        applied = true;
+        force = ofVec3f(0,0,0);
+    }
+    void apply(const ofVec3f f) {
+        applied = false;
+        force = f;
+    }
+    void updateForce(Particle *particle) {
+        particle -> forces += force;
+    }
+    ofVec3f force;
+};
+
 class ImpulseRadialForce : public ParticleForce {
 	float magnitude = 1.0;
 	float height = .2;

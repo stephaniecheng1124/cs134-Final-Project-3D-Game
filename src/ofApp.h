@@ -59,7 +59,7 @@ class ofApp : public ofBaseApp{
     bool bPointSelected;
     bool bRoverLoaded;
     bool bTerrainSelected;
-    bool bCollision;
+    bool bCollision;  //Stephanie
     
     ofVec3f selectedPoint;
     ofVec3f intersectPoint;
@@ -96,6 +96,8 @@ class ofApp : public ofBaseApp{
         TurbulenceForce* turbForce2;
         GravityForce* gravityForce2;
         ThrustForce* thrustForceLunar2;
+    
+        ImpulseForce* impulseForce;
     
         //GUI
         ofxPanel gui;

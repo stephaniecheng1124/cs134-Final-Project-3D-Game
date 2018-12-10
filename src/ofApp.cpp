@@ -69,7 +69,7 @@ void ofApp::setup(){
     mars.loadModel("geo/terrain5.obj");            //Stephanie
     mars.setScaleNormalization(false);
     mars.setScale(.025, .025, .025);
-    boundingBox = meshBounds(mars.getMesh(0), 0.25);
+    boundingBox = meshBounds(mars.getMesh(0), 0.025);
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
     //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
@@ -113,11 +113,13 @@ void ofApp::setup(){
     turbForce = new TurbulenceForce(ofVec3f(0, 0, 0), ofVec3f(0, 0, 0));
     gravityForce = new GravityForce(ofVec3f(0, -gravity, 0));  //Stephanie changed for slider
     thrustForceLunar = new ThrustForce(ofVec3f(0, 0, 0));
+    impulseForce = new ImpulseForce(); //Create new impulseforce to repel the ship
     
     //Add Forces
     emitter.sys->addForce(turbForce);
     emitter.sys->addForce(gravityForce);
     emitter.sys->addForce(thrustForceLunar);
+    emitter.sys->addForce(impulseForce);
     emitter.setPosition(lander.getPosition());
     
     //Emitter settings
@@ -170,6 +172,8 @@ void ofApp::setup(){
     //Spawn the single particle that will control the position of the lander
     emitter.spawn(ofGetElapsedTimef());
     
+    
+    
 
 }
 
@@ -178,7 +182,11 @@ void ofApp::update() {
     
     // live update of forces  (with sliders)  Stephanie
     //
-    gravityForce->set(ofVec3f(0, -gravity, 0));
+    
+    if (!bCollision) {
+        gravityForce->set(ofVec3f(0, -gravity, 0));
+    }
+    
     
     //Update both emitters
     emitter.sys -> update();
@@ -192,7 +200,7 @@ void ofApp::update() {
     engineEmitter2.update();
     
     
-    //only check if the lander is moving downwards   --Stephanie
+    //only check if the lander is moving downwards & not collided   --Stephanie
     if (emitter.sys->particles[0].velocity.y < 0) {
         checkCollision();
     }
@@ -337,6 +345,11 @@ void ofApp::keyPressed(int key) {
 	case 'H':
 	case 'h':
 		break;
+        case 'i': {
+        ofVec3f vel = emitter.sys->particles[0].velocity;
+        impulseForce -> apply(-60 * vel);
+        }
+        break;
 	case 'P':
 	case 'p':
 		break;
@@ -368,13 +381,14 @@ void ofApp::keyPressed(int key) {
 		cam.enableMouseInput();
 		bAltKeyDown = true;
 		break;
-    
 	case OF_KEY_SHIFT:
 		break;
 	case OF_KEY_DEL:
 		break;
 	case OF_KEY_UP:
+        bCollision = false;
         emitter.sys->reset();
+        impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
         if (bCtrlKeyDown) {
             thrustForceLunar ->set(ofVec3f(0, 0, 1));
@@ -388,18 +402,21 @@ void ofApp::keyPressed(int key) {
         engineEmitter2.start();
 		break;
 	case OF_KEY_DOWN:
-        emitter.sys->reset();
-        turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
-        if (bCtrlKeyDown) {
-            thrustForceLunar ->set(ofVec3f(0, 0, -1));
+        if (!bCollision) {
+            emitter.sys->reset();
+            impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
+            turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
+            if (bCtrlKeyDown) {
+                thrustForceLunar ->set(ofVec3f(0, 0, -1));
+            }
+            else {
+                thrustForceLunar ->set(ofVec3f(0, -1, 0));
+            }
+            engineEmitter.sys->reset();
+            engineEmitter.start();
+            engineEmitter2.sys->reset();
+            engineEmitter2.start();
         }
-        else {
-            thrustForceLunar ->set(ofVec3f(0, -1, 0));
-        }
-        engineEmitter.sys->reset();
-        engineEmitter.start();
-        engineEmitter2.sys->reset();
-        engineEmitter2.start();
 		break;
     case 'z':
     case OF_KEY_CONTROL:
@@ -407,8 +424,9 @@ void ofApp::keyPressed(int key) {
         break;
 	case OF_KEY_LEFT:
         emitter.sys->reset();
+        impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(-1, 0, 0));
-        turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
+        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));}
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -416,8 +434,9 @@ void ofApp::keyPressed(int key) {
 		break;
 	case OF_KEY_RIGHT:
         emitter.sys->reset();
+        impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(1, 0, 0));
-        turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
+        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));}
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -448,6 +467,9 @@ void ofApp::keyReleased(int key) {
    
 	case OF_KEY_SHIFT:
 		break;
+    case 'i':
+        impulseForce -> set(ofVec3f(0, 0, 0));
+        break;
     case OF_KEY_UP:
     case OF_KEY_DOWN:
     case OF_KEY_LEFT:
@@ -510,14 +532,23 @@ void ofApp::checkCollision() {
     Vector3 center = landerBox.center();
     contactPoint = ofVec3f(center.x(), center.y() - landerBox.height()/2, center.z()) + lander.getPosition();
     ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
-    if (vel.y > 0) return;
+    
+    //Don't check if ship is moving up or not moving
+    if (vel.y >= 0) return;
     
     TreeNode node;
     myTree.pointIntersect(contactPoint, myTree.root, node);
     if (node.points.size() > 0) {
         bCollision = true;
-        cout << "Intersects!!!!!" << endl;
-        //contactPoint = mars.getMesh(0).getVertex(node.points[0]);
+        cout << "Intersects!!!!!" << ofGetElapsedTimeMillis() << endl;
+        
+        //apply impulse force --------- Stephanie
+        ofVec3f vel = emitter.sys->particles[0].velocity;
+        impulseForce -> apply(-60 * vel);
+        
+        gravityForce ->set(ofVec3f(0, 0, 0)); //Stop gravity from sinking the ship down
+        turbForce -> set(ofVec3f(0, 0, 0), ofVec3f(0, 0, 0)); //Stop ship movement
+        
     }
     
 }
