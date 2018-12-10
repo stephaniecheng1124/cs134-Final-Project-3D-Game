@@ -66,7 +66,7 @@ void ofApp::setup(){
 	initLightingAndMaterials();
     
     //mars.loadModel("geo/mars-low-v2.obj");
-    mars.loadModel("geo/terrain5.obj");            //Stephanie
+    mars.loadModel("geo/texturedTerrain.obj");            //Stephanie
     mars.setScaleNormalization(false);
     mars.setScale(.025, .025, .025);
     boundingBox = meshBounds(mars.getMesh(0), 0.025);
