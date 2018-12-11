@@ -46,6 +46,16 @@ class ofApp : public ofBaseApp{
         bool bSoundPlaying; //Stephanie
         ofSoundPlayer engineSound;
     
+        //Stephanie
+        void loadVbo();
+        // textures
+        ofTexture  particleTex;
+        // shaders
+        ofVbo vbo;
+        ofShader shader;
+    
+        ofColor particleColor;
+    
         void toggleSelectTerrain();
         void setCameraTarget();
         bool  doPointSelection();

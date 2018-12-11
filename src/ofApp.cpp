@@ -19,6 +19,27 @@
 void ofApp::setup(){
     
     //Stephanie
+    
+    // texture loading
+    ofDisableArbTex();     // disable rectangular textures
+    
+    // load textures
+    if (!ofLoadImage(particleTex, "images/dot.png")) {
+        cout << "Particle Texture File: images/dot.png not found" << endl;
+        ofExit();
+    }
+    
+    // load the shader
+    #ifdef TARGET_OPENGLES
+        shader.load("shaders_gles/shader");
+    #else
+        shader.load("shaders/shader");
+    #endif
+    
+    //Set particle color to red first
+    particleColor = ofColor(255, 98, 20);
+    
+    //Stephanie
     gui.setup();
     gui.add(gravity.setup("Gravity", 0, 0, 2));
     gui.add(restitution.setup("Restitution", 0, 0, 1));
@@ -216,8 +237,34 @@ void ofApp::update() {
     
 }
 
+//---------------------------------------------------------------------------------------------------------------------------
+
+// load vertex buffer in preparation for rendering
+void ofApp::loadVbo() {
+    if (engineEmitter.sys->particles.size() < 1) return;
+    
+    vector<ofVec3f> sizes;
+    vector<ofVec3f> points;
+    for (int i = 0; i < engineEmitter.sys->particles.size(); i++) {
+        points.push_back(engineEmitter.sys->particles[i].position);
+        sizes.push_back(ofVec3f(10));
+    }
+    for (int i = 0; i < engineEmitter2.sys->particles.size(); i++) {
+        points.push_back(engineEmitter2.sys->particles[i].position);
+        sizes.push_back(ofVec3f(8));
+    }
+    //upload the data to the vbo
+    int total = (int)points.size();
+    vbo.clear();
+    vbo.setVertexData(&points[0], total, GL_STATIC_DRAW);
+    vbo.setNormalData(&sizes[0], total, GL_STATIC_DRAW);
+}
+
 //--------------------------------------------------------------
 void ofApp::draw() {
+    
+    //Stephanie
+    loadVbo();
 
 	//	ofBackgroundGradient(ofColor(20), ofColor(0));   // pick your own backgroujnd
 	//	ofBackground(ofColor::black);
@@ -231,16 +278,7 @@ void ofApp::draw() {
 		ofPopMatrix();
 	}
     
-    
-
 	theCam->begin();
-    
-   
-    
-    //Draw the particles
-    engineEmitter.sys -> draw();
-    engineEmitter2.sys -> draw();
-    //emitter.sys -> draw();
     
 	ofPushMatrix();
 	if (bWireframe) {                    // wireframe mode  (include axis)
@@ -277,6 +315,46 @@ void ofApp::draw() {
         ofDrawSphere(selectedPoint, .1);
     }
     
+    //---------------------------------------------------------Draw glowing particles - Stephanie
+    //Draw the particles
+    //engineEmitter.sys -> draw();
+    //engineEmitter2.sys -> draw();
+    //emitter.sys -> draw();
+    
+    glDepthMask(GL_FALSE);
+    
+    //Draw explosion
+    //Fireworks red explosion
+    ofSetColor(particleColor);
+    
+    // this makes everything look glowy :)
+    ofEnableBlendMode(OF_BLENDMODE_ADD);
+    ofEnablePointSprites();
+    
+    // begin drawing the particles
+    shader.begin();
+    
+    // draw particle emitter here..
+    //    emitter.draw();
+    particleTex.bind();
+    vbo.draw(GL_POINTS, 0, (int)(engineEmitter.sys->particles.size() + engineEmitter2.sys->particles.size()));
+    particleTex.unbind();
+    
+    //  end drawing in the camera
+    shader.end();
+    ofDisablePointSprites();
+    ofDisableBlendMode();
+    ofEnableAlphaBlending();
+    
+    // set back the depth mask
+    //
+    glDepthMask(GL_TRUE);
+    
+    //Change color back to normal
+    ofSetColor(50, 50, 50);
+    
+    //--------------------------------------------------------- Draw glowing particles End - Stephanie
+    
     // Draw the bounding boxes - Stephanie
     ofNoFill();
     ofSetColor(ofColor::white);
@@ -288,11 +366,6 @@ void ofApp::draw() {
     //myTree.drawLeafNodes(myTree.root);
     //myTree.draw(myTree.root, myTree.numOfLevels, 1);
     ////////////////////////////////////////////////////////////////////////////////
-    
-    
-	
-    
-    
     
 	ofPopMatrix();
     
@@ -306,9 +379,6 @@ void ofApp::draw() {
 	str += "Frame Rate: " + std::to_string(ofGetFrameRate());
 	ofSetColor(ofColor::white);
 	ofDrawBitmapString(str, ofGetWindowWidth() - 170, 15);
-    
-    
-
 }
 
 
