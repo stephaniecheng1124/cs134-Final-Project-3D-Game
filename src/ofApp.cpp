@@ -21,6 +21,7 @@ void ofApp::setup(){
     //Stephanie
     gui.setup();
     gui.add(gravity.setup("Gravity", 0, 0, 2));
+    gui.add(restitution.setup("Restitution", 0, 0, 1));
 
 	bWireframe = false;
 	bDisplayPoints = false;
@@ -28,9 +29,14 @@ void ofApp::setup(){
 	bCtrlKeyDown = false;
 	bLanderLoaded = false;
     
-    bRoverLoaded = false;     //Stephanie
+    //Stephanie
+    bRoverLoaded = false;
     bTerrainSelected = true;
     bCollision = false;
+    bSoundPlaying = false;
+    
+    engineSound.load("sounds/fireloop.mp3");
+    engineSound.setLoop(true);
     
 	cam.setDistance(10);
 	cam.setNearClip(.1);
@@ -65,11 +71,11 @@ void ofApp::setup(){
 	//
 	initLightingAndMaterials();
     
-    //mars.loadModel("geo/mars-low-v2.obj");
-    mars.loadModel("geo/texturedTerrain.obj");            //Stephanie
+    mars.loadModel("geo/mars-low-v2.obj");
+    //mars.loadModel("geo/texturedTerrain.obj");            //Stephanie
     mars.setScaleNormalization(false);
-    mars.setScale(.025, .025, .025);
-    boundingBox = meshBounds(mars.getMesh(0), 0.025);
+    //mars.setScale(.025, .025, .025);
+    boundingBox = meshBounds(mars.getMesh(0), 1);
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
     //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
@@ -128,6 +134,8 @@ void ofApp::setup(){
     emitter.setEmitterType(RadialEmitter);
     emitter.setGroupSize(1);
     emitter.setLifespan(100000);
+    
+    
     
     
     //////////////////////////////////Set up emitter 2 & 3///////////////////////////////////
@@ -200,7 +208,7 @@ void ofApp::update() {
     engineEmitter2.update();
     
     
-    //only check if the lander is moving downwards & not collided   --Stephanie
+    //only check if the lander is moving downwards --Stephanie
     if (emitter.sys->particles[0].velocity.y < 0) {
         checkCollision();
     }
@@ -347,7 +355,7 @@ void ofApp::keyPressed(int key) {
 		break;
         case 'i': {
         ofVec3f vel = emitter.sys->particles[0].velocity;
-        impulseForce -> apply(-60 * vel);
+        impulseForce -> apply(-60 * vel * (restitution + 1));
         }
         break;
 	case 'P':
@@ -386,6 +394,8 @@ void ofApp::keyPressed(int key) {
 	case OF_KEY_DEL:
 		break;
 	case OF_KEY_UP:
+        playEngineSound();
+        bSoundPlaying = true;
         bCollision = false;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
@@ -403,6 +413,8 @@ void ofApp::keyPressed(int key) {
 		break;
 	case OF_KEY_DOWN:
         if (!bCollision) {
+            playEngineSound();
+            bSoundPlaying = true;
             emitter.sys->reset();
             impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
             turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
@@ -423,6 +435,8 @@ void ofApp::keyPressed(int key) {
         bCtrlKeyDown = true;
         break;
 	case OF_KEY_LEFT:
+        playEngineSound();
+        bSoundPlaying = true;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(-1, 0, 0));
@@ -433,6 +447,8 @@ void ofApp::keyPressed(int key) {
         engineEmitter2.start();
 		break;
 	case OF_KEY_RIGHT:
+        playEngineSound();
+        bSoundPlaying = true;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(1, 0, 0));
@@ -474,6 +490,8 @@ void ofApp::keyReleased(int key) {
     case OF_KEY_DOWN:
     case OF_KEY_LEFT:
     case OF_KEY_RIGHT:
+        engineSound.stop();
+        bSoundPlaying = false;
         thrustForceLunar ->set(ofVec3f(0, 0, 0));
         break;
     case 'z':
@@ -544,15 +562,31 @@ void ofApp::checkCollision() {
         
         //apply impulse force --------- Stephanie
         ofVec3f vel = emitter.sys->particles[0].velocity;
-        impulseForce -> apply(-60 * vel);
+        impulseForce -> apply(-60 * vel * (restitution + 1));
         
-        gravityForce ->set(ofVec3f(0, 0, 0)); //Stop gravity from sinking the ship down
+        //Stop gravity from sinking the ship down when it reaches a stop - Stephanie
+        if (vel.y <= 0 && vel.y >= -0.05){
+            gravityForce ->set(ofVec3f(0, 0, 0));
+            emitter.sys->particles[0].velocity.set(0,0,0); //Bring the ship to a halt - Stephanie
+            cout << "INNNN------------------> " << endl;
+        }
+        
+        
+        //gravityForce ->set(ofVec3f(0, 0, 0));
+        cout << "Gravity: " << gravityForce -> gravity.y << "Velo:" << vel.y << endl;
         turbForce -> set(ofVec3f(0, 0, 0), ofVec3f(0, 0, 0)); //Stop ship movement
         
     }
     
 }
 
+//--------------------------------------------------------------
+//Stephanie
+void ofApp::playEngineSound() {
+    if (bSoundPlaying) return;
+    if(!engineSound.isPlaying()) engineSound.play();
+}
+    
 
 //draw a box from a "Box" class
 //

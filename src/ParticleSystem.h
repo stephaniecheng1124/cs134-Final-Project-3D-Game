@@ -34,8 +34,9 @@ public:
 // Some convenient built-in forces
 //
 class GravityForce: public ParticleForce {
-	ofVec3f gravity;
+	
 public:
+    ofVec3f gravity;
 	void set(const ofVec3f &g) { gravity = g; }
 	GravityForce(const ofVec3f & gravity);
 	void updateForce(Particle *);

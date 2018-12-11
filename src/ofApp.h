@@ -41,35 +41,38 @@ class ofApp : public ofBaseApp{
 		void savePicture();
 		void toggleWireframeMode();
 		void togglePointsDisplay();
-        void checkCollision();
+        void checkCollision(); //Stephanie
+        void playEngineSound(); //Stephanie
+        bool bSoundPlaying; //Stephanie
+        ofSoundPlayer engineSound;
     
-    void toggleSelectTerrain();
-    void setCameraTarget();
-    bool  doPointSelection();
-    void drawBox(const Box &box);
-    void drawMovingBox(const Box &box, const ofVec3f &offset);
-    Box meshBounds(const ofMesh &, float scale);
-    void subDivideBox8(const Box &b, vector<Box> & boxList);
+        void toggleSelectTerrain();
+        void setCameraTarget();
+        bool  doPointSelection();
+        void drawBox(const Box &box);
+        void drawMovingBox(const Box &box, const ofVec3f &offset); //Stephanie
+        Box meshBounds(const ofMesh &, float scale);
+        void subDivideBox8(const Box &b, vector<Box> & boxList);
     
-    bool mouseIntersectPlane(ofVec3f planePoint, ofVec3f planeNorm, ofVec3f &point);
+        bool mouseIntersectPlane(ofVec3f planePoint, ofVec3f planeNorm, ofVec3f &point);
     
-    Box boundingBox;
-    Box landerBox;          //Stephanie
-    ofxAssimpModelLoader mars, rover;
-    bool bPointSelected;
-    bool bRoverLoaded;
-    bool bTerrainSelected;
-    bool bCollision;  //Stephanie
+        Box boundingBox;
+        Box landerBox;          //Stephanie
+        ofxAssimpModelLoader mars, rover;
+        bool bPointSelected;
+        bool bRoverLoaded;
+        bool bTerrainSelected;
+        bool bCollision;  //Stephanie
     
-    ofVec3f selectedPoint;
-    ofVec3f intersectPoint;
-    ofVec3f contactPoint; //Stephanie
-    Octree myTree;
-    TreeNode selectedNode;
+        ofVec3f selectedPoint;
+        ofVec3f intersectPoint;
+        ofVec3f contactPoint; //Stephanie
+        Octree myTree;
+        TreeNode selectedNode;
     
     
     
-    const float selectionRange = 4.0;
+        const float selectionRange = 4.0;
 
 		ofEasyCam cam;
 		ofxAssimpModelLoader lander;
@@ -102,7 +105,7 @@ class ofApp : public ofBaseApp{
         //GUI
         ofxPanel gui;
         ofxFloatSlider gravity;
-        //ofxFloatSlider restitution;
+        ofxFloatSlider restitution;
 	
 
 };
