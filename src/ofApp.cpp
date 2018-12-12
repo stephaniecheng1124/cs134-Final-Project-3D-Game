@@ -374,11 +374,19 @@ void ofApp::draw() {
 
     gui.draw();
 	// draw screen data
-	//
+	//Framerate
 	string str;
 	str += "Frame Rate: " + std::to_string(ofGetFrameRate());
 	ofSetColor(ofColor::white);
-	ofDrawBitmapString(str, ofGetWindowWidth() - 170, 15);
+	ofDrawBitmapString(str, ofGetWindowWidth() - 200, 15);
+    
+    //Altitude
+    string str2;
+    str2 += "Altitude (AGL): " + std::to_string(lander.getPosition().y);
+    ofSetColor(ofColor::white);
+    ofDrawBitmapString(str2, ofGetWindowWidth() - 200, 30);
+    
+
 }
 
 
