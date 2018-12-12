@@ -68,7 +68,7 @@ class ofApp : public ofBaseApp{
     
         Box boundingBox;
         Box landerBox;          //Stephanie
-        ofxAssimpModelLoader mars, rover;
+        ofxAssimpModelLoader mars, marsTextured, rover;
         bool bPointSelected;
         bool bRoverLoaded;
         bool bTerrainSelected;
@@ -85,7 +85,7 @@ class ofApp : public ofBaseApp{
         const float selectionRange = 4.0;
 
 		ofEasyCam cam;
-		ofxAssimpModelLoader lander;
+		ofxAssimpModelLoader lander, landerTextured;
 		ofLight light;
 		ofImage backgroundImage;
 		ofCamera *theCam = NULL;
