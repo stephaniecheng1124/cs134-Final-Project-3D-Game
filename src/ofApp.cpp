@@ -70,11 +70,6 @@ void ofApp::setup(){
     
 	cam.disableMouseInput();
 
-	topCam.setNearClip(.1);
-	topCam.setFov(65.5);   
-	topCam.setPosition(0, 10, 0);
-	topCam.lookAt(glm::vec3(0, 0, 0));
-
 	// set current camera;
 	//
 	theCam = &cam;
@@ -92,10 +87,11 @@ void ofApp::setup(){
 	//
 	initLightingAndMaterials();
     
-    mars.loadModel("geo/mars-low-v2.obj");
-    //mars.loadModel("geo/texturedTerrain.obj");            //Stephanie
+    mars.loadModel("geo/smallTerrain_singleMesh_final.obj");		//single mesh for octree
+    marsTextured.loadModel("geo/smallTerrain_final.obj");            //textured model w/ lots of meshes
     mars.setScaleNormalization(false);
-    //mars.setScale(.025, .025, .025);
+	marsTextured.setScaleNormalization(false);
+    //mars.setScale(.025, .025, .025); //breaks octree position!
     boundingBox = meshBounds(mars.getMesh(0), 1);
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
@@ -103,24 +99,25 @@ void ofApp::setup(){
     myTree.create(mars.getMesh(0), 8);
     
     //Turn the mesh over                              //Stephanie
-    
     mars.setRotation(0, 180, 0, 0, 1);
+	marsTextured.setRotation(0, 180, 0, 0, 1);
 
 	// load lander model
-	//
-    
-    //lander.loadModel("geo/Lamborghini_Aventador.obj"
-    //lander.loadModel("geo/ship_assem_v3.obj")
-    
-	if (lander.loadModel("geo/ship_assem_v3.obj")) {
+	//    
+	if (lander.loadModel("geo/ship_singleMesh_assem.obj")) {
+		landerTextured.loadModel("geo/ship_assem.obj");
 		lander.setScaleNormalization(false);
+		landerTextured.setScaleNormalization(false);
         lander.setRotation(0, 180, 0, 0, 1);
+		landerTextured.setRotation(0, 180, 0, 0, 1);
         
-        
-		lander.setScale(.03, .03, .03);
+		int scale = 1;
+		lander.setScale(scale, scale, scale);
+		landerTextured.setScale(scale, scale, scale);
 		
-		lander.setPosition(0,1,0);
-        landerBox = meshBounds(lander.getMesh(0), .03);
+		lander.setPosition(0,15,-10);
+		landerTextured.setPosition(lander.getPosition().x, lander.getPosition().y, lander.getPosition().z);
+        landerBox = meshBounds(lander.getMesh(0), .1);
 		bLanderLoaded = true;
         
         cout << "num vert: " << lander.getMesh(0).getNumVertices() << endl;
@@ -128,10 +125,27 @@ void ofApp::setup(){
         cout << "Mesh 0 name: " << lander.getMeshNames()[0] << endl;
 	}
 	else {
-		cout << "Error: Can't load model" << "geo/lander.obj" << endl;
+		cout << "Error: Can't load model" << "geo/ship_singleMesh_assem.obj" << endl;
 		ofExit(0);
 	}
     
+	//////////Camera Setup: Nicholas
+
+	trackingCam.setNearClip(0.1);
+	trackingCam.setFov(75.5);
+	trackingCam.setPosition(ofVec3f(0, 20, 40));
+	trackingCam.lookAt(lander.getPosition());
+
+	downCam.setNearClip(3.3);
+	downCam.setFov(65.5);
+	downCam.setPosition(lander.getPosition());
+	downCam.lookAt(lander.getPosition() * ofVec3f(1, 0, 1));
+
+	frontCam.setNearClip(4.8);
+	frontCam.setFov(65.5);
+	frontCam.setPosition(lander.getPosition());
+	float forward = lander.getPosition().x == 0 ? 1 : lander.getPosition().x;
+	frontCam.lookAt(ofVec3f(abs(forward), lander.getPosition().y, lander.getPosition().z) * ofVec3f(-2, 1, 1));
     
     
     /////////////////////////////////Set up the emitter that has only 1 particle
@@ -234,7 +248,19 @@ void ofApp::update() {
         checkCollision();
     }
     
-    
+    /////////Camera position updating: Nicholas
+
+	trackingCam.lookAt(lander.getPosition());
+
+	downCam.setPosition(lander.getPosition());
+	downCam.lookAt(lander.getPosition() * ofVec3f(1, 0, 1));
+
+	frontCam.setPosition(lander.getPosition());
+	float forward = lander.getPosition().x == 0 ? 1 : lander.getPosition().x;
+	frontCam.lookAt(ofVec3f(abs(forward), lander.getPosition().y, lander.getPosition().z) * ofVec3f(-2, 1, 1));
+
+	//Update textured lander location
+	landerTextured.setPosition(lander.getPosition().x, lander.getPosition().y, lander.getPosition().z);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
@@ -285,7 +311,7 @@ void ofApp::draw() {
 		ofDisableLighting();
 		ofSetColor(ofColor::slateGray);
         //Causes frame drop
-        //mars.drawWireframe();
+        mars.drawWireframe();
 		if (bLanderLoaded) {
             
 			lander.drawWireframe();
@@ -294,9 +320,9 @@ void ofApp::draw() {
 	}
 	else {
 		ofEnableLighting();              // shaded mode
-        mars.drawFaces();  //Stephanie
+        marsTextured.drawFaces();  //Stephanie, Nicholas: draw TEXTURED not singlemesh!!
 		if (bLanderLoaded) {
-			lander.drawFaces();
+			landerTextured.drawFaces(); //Nicholas: draw TEXTURED not singlemesh!!
 
 		}
         if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
@@ -306,7 +332,7 @@ void ofApp::draw() {
         glPointSize(3);
         ofSetColor(ofColor::green);
         //Causes frame drop
-        //mars.drawVertices();
+        mars.drawVertices();
     }
     
     // highlight selected point (draw sphere around selected point) ///////////////////////////////////
@@ -360,7 +386,7 @@ void ofApp::draw() {
     ofSetColor(ofColor::white);
     drawBox(boundingBox);
     drawMovingBox(landerBox, lander.getPosition());
-    ofFill();  //important!!!! -Stephanie
+    //ofFill();  //important!!!! -Stephanie
     
     //////////////Draw either the whole octree or only the leaf nodes///////////////
     //myTree.drawLeafNodes(myTree.root);
@@ -460,8 +486,14 @@ void ofApp::keyPressed(int key) {
 	case OF_KEY_F1:
 		theCam = &cam;
 		break;
+	case OF_KEY_F2:
+		theCam = &trackingCam;
+		break;
 	case OF_KEY_F3:
-		theCam = &topCam;
+		theCam = &frontCam;
+		break;
+	case OF_KEY_F4:
+		theCam = &downCam;
 		break;
 	case OF_KEY_ALT:
 		cam.enableMouseInput();
