@@ -89,7 +89,9 @@ class ofApp : public ofBaseApp{
 		ofLight light;
 		ofImage backgroundImage;
 		ofCamera *theCam = NULL;
-		ofCamera topCam;
+		ofCamera trackingCam;
+		ofCamera frontCam;
+		ofCamera downCam;
 
 		bool bAltKeyDown;
 		bool bCtrlKeyDown;

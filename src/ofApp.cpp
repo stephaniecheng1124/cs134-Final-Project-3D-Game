@@ -70,11 +70,6 @@ void ofApp::setup(){
     
 	cam.disableMouseInput();
 
-	topCam.setNearClip(.1);
-	topCam.setFov(65.5);   
-	topCam.setPosition(0, 10, 0);
-	topCam.lookAt(glm::vec3(0, 0, 0));
-
 	// set current camera;
 	//
 	theCam = &cam;
@@ -132,6 +127,23 @@ void ofApp::setup(){
 		ofExit(0);
 	}
     
+	//////////Camera Setup: Nicholas
+
+	trackingCam.setNearClip(0.1);
+	trackingCam.setFov(90);
+	trackingCam.setPosition(ofVec3f(0, 5, 15));
+	trackingCam.lookAt(lander.getPosition());
+
+	downCam.setNearClip(1);
+	downCam.setFov(65.5);
+	downCam.setPosition(lander.getPosition());
+	downCam.lookAt(lander.getPosition() * ofVec3f(1, 0, 1));
+
+	frontCam.setNearClip(1.5);
+	frontCam.setFov(65.5);
+	frontCam.setPosition(lander.getPosition());
+	float forward = lander.getPosition().x == 0 ? 1 : lander.getPosition().x;
+	frontCam.lookAt(ofVec3f(abs(forward), lander.getPosition().y, lander.getPosition().z) * ofVec3f(-2, 1, 1));
     
     
     /////////////////////////////////Set up the emitter that has only 1 particle
@@ -234,7 +246,16 @@ void ofApp::update() {
         checkCollision();
     }
     
-    
+    /////////Camera position updating: Nicholas
+
+	trackingCam.lookAt(lander.getPosition());
+
+	downCam.setPosition(lander.getPosition());
+	downCam.lookAt(lander.getPosition() * ofVec3f(1, 0, 1));
+
+	frontCam.setPosition(lander.getPosition());
+	float forward = lander.getPosition().x == 0 ? 1 : lander.getPosition().x;
+	frontCam.lookAt(ofVec3f(abs(forward), lander.getPosition().y, lander.getPosition().z) * ofVec3f(-2, 1, 1));
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
@@ -452,8 +473,14 @@ void ofApp::keyPressed(int key) {
 	case OF_KEY_F1:
 		theCam = &cam;
 		break;
+	case OF_KEY_F2:
+		theCam = &trackingCam;
+		break;
 	case OF_KEY_F3:
-		theCam = &topCam;
+		theCam = &frontCam;
+		break;
+	case OF_KEY_F4:
+		theCam = &downCam;
 		break;
 	case OF_KEY_ALT:
 		cam.enableMouseInput();
