@@ -75,6 +75,16 @@ class Box {
         return (max() - min()).y();
     }
     
+    //Stephanie
+    float length() {
+        return (max() - min()).x();
+    }
+    
+    //Stephanie
+    float width() {
+        return (max() - min()).z();
+    }
+    
     
 };
 

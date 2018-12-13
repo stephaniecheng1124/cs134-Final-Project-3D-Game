@@ -42,6 +42,10 @@ class ofApp : public ofBaseApp{
 		void toggleWireframeMode();
 		void togglePointsDisplay();
         void checkCollision(); //Stephanie
+        void checkFrontCollision(); //Stephanie
+        void checkBackCollision(); //Stephanie
+        void checkLeftCollision(); //Stephanie
+        void checkRightCollision(); //Stephanie
         void playEngineSound(); //Stephanie
         bool bSoundPlaying; //Stephanie
         ofSoundPlayer engineSound;
@@ -73,10 +77,17 @@ class ofApp : public ofBaseApp{
         bool bRoverLoaded;
         bool bTerrainSelected;
         bool bCollision;  //Stephanie
+        bool bSideCollision;  //Stephanie
     
         ofVec3f selectedPoint;
         ofVec3f intersectPoint;
+    
         ofVec3f contactPoint; //Stephanie
+    
+        ofVec3f contactPointFront; //Stephanie
+        ofVec3f contactPointBack; //Stephanie
+        ofVec3f contactPointRight; //Stephanie
+        ofVec3f contactPointLeft; //Stephanie
         Octree myTree;
         TreeNode selectedNode;
     

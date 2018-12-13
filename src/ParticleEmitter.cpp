@@ -139,7 +139,7 @@ void ParticleEmitter::spawn(float time) {
     case DiscEmitter:
     {
         //Find normalized radius vector
-        ofVec3f dir = ofVec3f(ofRandom(-1, 1), 0, ofRandom(-1, 1)).getNormalized()*0.08;
+        ofVec3f dir = ofVec3f(0, ofRandom(-1, 1), ofRandom(-1, 1)).getNormalized()*0.2;
         //Add it to the position to get ring effect
         //Add a bit of randomization for natural effect
         particle.position.set(position + dir + ofVec3f(0, ofRandom(-0.1, 0.1), 0));

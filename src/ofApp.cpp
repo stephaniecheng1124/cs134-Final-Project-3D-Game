@@ -6,7 +6,7 @@
 //   Please make sure to you the required data files installed in your $OF/data directory.
 //
 //                                             (c) Kevin M. Smith  - 2018
-//Stephanie Cheng cs134
+//Stephanie Cheng, Nicholas Gadjali - cs134
 
 #include "ofApp.h"
 #include "Util.h"
@@ -54,7 +54,10 @@ void ofApp::setup(){
     bRoverLoaded = false;
     bTerrainSelected = true;
     bCollision = false;
+    bSideCollision = false;
     bSoundPlaying = false;
+    
+    
     
     engineSound.load("sounds/fireloop.mp3");
     engineSound.setLoop(true);
@@ -96,7 +99,7 @@ void ofApp::setup(){
     cout << "num meshes land: " << mars.getMeshCount() << endl;
     
     //Build the octree w/ 9 levels                    ////////////////////////////////////////////Stephanie
-    myTree.create(mars.getMesh(0), 8);
+    myTree.create(mars.getMesh(0), 7);
     
     //Turn the mesh over                              //Stephanie
     mars.setRotation(0, 180, 0, 0, 1);
@@ -191,7 +194,7 @@ void ofApp::setup(){
     engineEmitter.setGroupSize(30);
     engineEmitter.setRandomLife(true);
     engineEmitter.setLifespanRange(ofVec2f(0.5, 0.8));
-    engineEmitter.setPosition(lander.getPosition() + ofVec3f(1.25, -0.8,0.4));
+    engineEmitter.setPosition(lander.getPosition() + ofVec3f(4.3, -2.60,1.25));
     //cout << "POS: " << lander.getPosition() << endl;
     engineEmitter.setEmitterType(DiscEmitter);
     
@@ -207,7 +210,7 @@ void ofApp::setup(){
     engineEmitter2.setGroupSize(30);
     engineEmitter2.setRandomLife(true);
     engineEmitter2.setLifespanRange(ofVec2f(0.5, 0.8));
-    engineEmitter2.setPosition(lander.getPosition() + ofVec3f(1.25, -0.8,-0.4));
+    engineEmitter2.setPosition(lander.getPosition() + ofVec3f(4.3, -2.60,-1.25));
     engineEmitter2.setEmitterType(DiscEmitter);
     
     ///////////////////////////////////Spawn particle////////////////////////////////////
@@ -217,8 +220,10 @@ void ofApp::setup(){
     
     
     
-
+    
 }
+
+//---------------------------------------------------------------------------------------------------------------------------
 
 
 void ofApp::update() {
@@ -236,17 +241,40 @@ void ofApp::update() {
     if (emitter.sys -> particles.size() > 0) {
         lander.setPosition(emitter.sys -> particles[0].position.x,emitter.sys -> particles[0].position.y,emitter.sys -> particles[0].position.z);
     }
-    engineEmitter.setPosition(lander.getPosition()+ ofVec3f(1.25, -0.8,0.4)); //Attach emitter to thruster and follow it
+    engineEmitter.setPosition(lander.getPosition()+ ofVec3f(4.3, -2.60,1.25)); //Attach emitter to thruster and follow it
     engineEmitter.update();
     
-    engineEmitter2.setPosition(lander.getPosition()+ ofVec3f(1.25, -0.8,-0.4)); //Attach emitter2 to thruster2 and follow it
+    engineEmitter2.setPosition(lander.getPosition()+ ofVec3f(4.3, -2.60,-1.25)); //Attach emitter2 to thruster2 and follow it
     engineEmitter2.update();
     
+    //Does not call collision detect if movement is too small (caused by turbulence force)
     
-    //only check if the lander is moving downwards --Stephanie
-    if (emitter.sys->particles[0].velocity.y < 0) {
+    //only check bottom collision if the lander is moving downwards --Stephanie
+    if (emitter.sys->particles[0].velocity.y < 0.5) {
         checkCollision();
     }
+    
+    //Check front bumper --Stephanie
+    if (emitter.sys->particles[0].velocity.x < -0.5) {
+        checkFrontCollision();
+    }
+    
+    //Check back bumper --Stephanie
+    if (emitter.sys->particles[0].velocity.x > 0.5) {
+        checkBackCollision();
+    }
+    
+    //Check left bumper --Stephanie
+    if (emitter.sys->particles[0].velocity.z < -0.5) {
+        checkLeftCollision();
+    }
+    
+    //Check right bumper --Stephanie
+    if (emitter.sys->particles[0].velocity.z > 0.5) {
+        checkRightCollision();
+    }
+    
+    
     
     /////////Camera position updating: Nicholas
 
@@ -277,7 +305,7 @@ void ofApp::loadVbo() {
     }
     for (int i = 0; i < engineEmitter2.sys->particles.size(); i++) {
         points.push_back(engineEmitter2.sys->particles[i].position);
-        sizes.push_back(ofVec3f(8));
+        sizes.push_back(ofVec3f(10));
     }
     //upload the data to the vbo
     int total = (int)points.size();
@@ -340,6 +368,12 @@ void ofApp::draw() {
         ofSetColor(ofColor::darkViolet);
         ofDrawSphere(selectedPoint, .1);
     }
+    
+    //Debuf contact point
+    //Vector3 center2 = landerBox.center();
+    //contactPointFront = ofVec3f(center2.x() - landerBox.length()/2, center2.y(), center2.z())    + lander.getPosition();
+    //ofDrawSphere(contactPointFront, .9);
+
     
     //---------------------------------------------------------Draw glowing particles - Stephanie
     //Draw the particles
@@ -509,12 +543,12 @@ void ofApp::keyPressed(int key) {
         bCollision = false;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-        turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
+        turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5)); //Stephanie
         if (bCtrlKeyDown) {
-            thrustForceLunar ->set(ofVec3f(0, 0, 1));
+            thrustForceLunar ->set(ofVec3f(0, 0, 4));
         }
         else {
-            thrustForceLunar ->set(ofVec3f(0, 1, 0));
+            thrustForceLunar ->set(ofVec3f(0, 4, 0));
         }
         engineEmitter.sys->reset();
         engineEmitter.start();
@@ -527,12 +561,12 @@ void ofApp::keyPressed(int key) {
             bSoundPlaying = true;
             emitter.sys->reset();
             impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-            turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));
+            turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5)); //Stephanie
             if (bCtrlKeyDown) {
-                thrustForceLunar ->set(ofVec3f(0, 0, -1));
+                thrustForceLunar ->set(ofVec3f(0, 0, -4));
             }
             else {
-                thrustForceLunar ->set(ofVec3f(0, -1, 0));
+                thrustForceLunar ->set(ofVec3f(0, -4, 0));
             }
             engineEmitter.sys->reset();
             engineEmitter.start();
@@ -549,8 +583,8 @@ void ofApp::keyPressed(int key) {
         bSoundPlaying = true;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-        thrustForceLunar ->set(ofVec3f(-1, 0, 0));
-        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));}
+        thrustForceLunar ->set(ofVec3f(-4, 0, 0));
+        if (!bCollision) {turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5));} //Stephanie
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -561,8 +595,8 @@ void ofApp::keyPressed(int key) {
         bSoundPlaying = true;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-        thrustForceLunar ->set(ofVec3f(1, 0, 0));
-        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));}
+        thrustForceLunar ->set(ofVec3f(4, 0, 0));
+        if (!bCollision) {turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5));}  //Stephanie
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -655,7 +689,7 @@ void ofApp::mousePressed(int x, int y, int button) {
 //--------------------------------------------------------------
 
 
-//Used professor Smith's example ------------------- Stephanie
+//Used part of professor Smith's example ------------------- Stephanie
 void ofApp::checkCollision() {
     Vector3 center = landerBox.center();
     contactPoint = ofVec3f(center.x(), center.y() - landerBox.height()/2, center.z()) + lander.getPosition();
@@ -663,15 +697,15 @@ void ofApp::checkCollision() {
     
     //Don't check if ship is moving up or not moving
     if (vel.y >= 0) return;
-    
+    cout << "Checking!!!!!" << ofGetElapsedTimeMillis() << endl;
     TreeNode node;
     myTree.pointIntersect(contactPoint, myTree.root, node);
-    if (node.points.size() > 0) {
+    if (node.points.size() > 0 || lander.getPosition().y <= 6.4) {
         bCollision = true;
         cout << "Intersects!!!!!" << ofGetElapsedTimeMillis() << endl;
         
         //apply impulse force --------- Stephanie
-        ofVec3f vel = emitter.sys->particles[0].velocity;
+        //ofVec3f vel = emitter.sys->particles[0].velocity;
         impulseForce -> apply(-60 * vel * (restitution + 1));
         
         //Stop gravity from sinking the ship down when it reaches a stop - Stephanie
@@ -686,6 +720,116 @@ void ofApp::checkCollision() {
         cout << "Gravity: " << gravityForce -> gravity.y << "Velo:" << vel.y << endl;
         turbForce -> set(ofVec3f(0, 0, 0), ofVec3f(0, 0, 0)); //Stop ship movement
         
+    }
+    
+}
+
+//--------------------------------------------------------------
+
+
+//Referenced professor Smith's example ------------------- Stephanie
+void ofApp::checkFrontCollision() {
+    
+    //Stephanie
+    Vector3 center = landerBox.center();
+    //Setup the frontal contactpoint
+    contactPointFront = ofVec3f(center.x() - landerBox.length()/2, center.y(), center.z())    + lander.getPosition();
+  
+    //Stephanie
+    ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
+    
+    cout << "Checking Front------------!!!!!" << ofGetElapsedTimeMillis() << endl;
+    
+    TreeNode node;
+    myTree.pointIntersect(contactPointFront, myTree.root, node);
+    if (node.points.size() > 0) {
+        //apply impulse force --------- Stephanie
+        impulseForce -> apply(-60 * vel * (restitution + 1));
+        cout << "Bounce-----------&---&--------&------> " << ofGetElapsedTimeMillis() <<  endl;
+    }
+    
+    
+}
+
+//--------------------------------------------------------------
+
+
+//Referenced professor Smith's example ------------------- Stephanie
+void ofApp::checkBackCollision() {
+    
+    //Stephanie
+    Vector3 center = landerBox.center();
+    //Setup the back contactpoint
+    contactPointBack = ofVec3f(center.x() + landerBox.length()/2, center.y(), center.z())    + lander.getPosition();
+    //Stephanie
+    ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
+    
+    
+    cout << "Checking back!------------!!!!!" << ofGetElapsedTimeMillis() << endl;
+    
+    //for (int i = 0; i < 4; i++) {
+    TreeNode node;
+    myTree.pointIntersect(contactPointBack, myTree.root, node);
+    if (node.points.size() > 0) {
+        //apply impulse force --------- Stephanie
+        impulseForce -> apply(-60 * vel * (restitution + 1));
+        cout << "Bounce-----------&---&--------&------> " << ofGetElapsedTimeMillis() <<  endl;
+        //break;
+    }
+    //}
+    
+}
+
+//--------------------------------------------------------------
+
+
+//Referenced professor Smith's example ------------------- Stephanie
+void ofApp::checkLeftCollision() {
+    
+    //Stephanie
+    Vector3 center = landerBox.center();
+    //Setup the various contactpoints
+    contactPointLeft = ofVec3f(center.x(), center.y(), center.z() - landerBox.width()/2)    + lander.getPosition();
+    //Stephanie
+    ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
+    
+    
+    cout << "Checking Left!!-----!!-------!!!!!" << ofGetElapsedTimeMillis() << endl;
+    
+    TreeNode node;
+    myTree.pointIntersect(contactPointLeft, myTree.root, node);
+    if (node.points.size() > 0) {
+        //apply impulse force --------- Stephanie
+        impulseForce -> apply(-60 * vel * (restitution + 1));
+        cout << "Bounce-----------&---&--------&------> " << ofGetElapsedTimeMillis() <<  endl;
+    }
+    
+    
+}
+
+//--------------------------------------------------------------
+
+
+//Referenced professor Smith's example ------------------- Stephanie
+void ofApp::checkRightCollision() {
+    
+    //Stephanie
+    Vector3 center = landerBox.center();
+    //Setup the various contactpoints
+    contactPointRight = ofVec3f(center.x(), center.y(), center.z() + landerBox.width()/2)    + lander.getPosition();
+    
+    //Stephanie
+    ofVec3f vel = emitter.sys->particles[0].velocity; //velocity of the lander
+    
+    
+    cout << "Checking right------&------!!!!!" << ofGetElapsedTimeMillis() << endl;
+    
+    TreeNode node;
+    myTree.pointIntersect(contactPointRight, myTree.root, node);
+    if (node.points.size() > 0) {
+        //apply impulse force --------- Stephanie
+        impulseForce -> apply(-60 * vel * (restitution + 1));
+        cout << "Bounce-----------&---&--------&------> " << ofGetElapsedTimeMillis() <<  endl;
     }
     
 }
