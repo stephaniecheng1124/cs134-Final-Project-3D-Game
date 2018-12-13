@@ -61,6 +61,7 @@ class ofApp : public ofBaseApp{
         ofColor particleColor;
     
         void toggleSelectTerrain();
+        void toggleDrawBoundingBox();  //Stephanie
         void setCameraTarget();
         bool  doPointSelection();
         void drawBox(const Box &box);
@@ -78,6 +79,7 @@ class ofApp : public ofBaseApp{
         bool bTerrainSelected;
         bool bCollision;  //Stephanie
         bool bSideCollision;  //Stephanie
+        bool bDrawBounding; //Stephanie
     
         ofVec3f selectedPoint;
         ofVec3f intersectPoint;
@@ -96,13 +98,14 @@ class ofApp : public ofBaseApp{
         const float selectionRange = 4.0;
 
 		ofEasyCam cam;
-		ofxAssimpModelLoader lander, landerTextured;
+		ofxAssimpModelLoader lander, landerTextured; //Nicholas
 		ofLight light;
+        ofLight keyLight; //Stephanie
 		ofImage backgroundImage;
 		ofCamera *theCam = NULL;
-		ofCamera trackingCam;
-		ofCamera frontCam;
-		ofCamera downCam;
+		ofCamera trackingCam; //Nicholas
+		ofCamera frontCam; //Nicholas
+		ofCamera downCam; //Nicholas
 
 		bool bAltKeyDown;
 		bool bCtrlKeyDown;
@@ -125,7 +128,7 @@ class ofApp : public ofBaseApp{
     
         ImpulseForce* impulseForce;
     
-        //GUI
+        //GUI - Stephanie
         ofxPanel gui;
         ofxFloatSlider gravity;
         ofxFloatSlider restitution;

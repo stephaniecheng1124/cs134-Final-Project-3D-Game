@@ -56,10 +56,10 @@ void ofApp::setup(){
     bCollision = false;
     bSideCollision = false;
     bSoundPlaying = false;
+    bDrawBounding = false;
     
     
-    
-    engineSound.load("sounds/fireloop.mp3");
+    engineSound.load("sounds/wind.mp3");
     engineSound.setLoop(true);
     
 	cam.setDistance(10);
@@ -86,8 +86,7 @@ void ofApp::setup(){
 	bBackgroundLoaded = backgroundImage.load("images/starfield-plain.jpg");
 
 
-	// setup rudimentary lighting 
-	//
+	// setup rudimentary lighting
 	initLightingAndMaterials();
     
     mars.loadModel("geo/smallTerrain_singleMesh_final.obj");		//single mesh for octree
@@ -218,9 +217,6 @@ void ofApp::setup(){
     //Spawn the single particle that will control the position of the lander
     emitter.spawn(ofGetElapsedTimef());
     
-    
-    
-    
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
@@ -258,28 +254,22 @@ void ofApp::update() {
     if (emitter.sys->particles[0].velocity.x < -0.5) {
         checkFrontCollision();
     }
-    
     //Check back bumper --Stephanie
     if (emitter.sys->particles[0].velocity.x > 0.5) {
         checkBackCollision();
     }
-    
     //Check left bumper --Stephanie
     if (emitter.sys->particles[0].velocity.z < -0.5) {
         checkLeftCollision();
     }
-    
     //Check right bumper --Stephanie
     if (emitter.sys->particles[0].velocity.z > 0.5) {
         checkRightCollision();
     }
-    
-    
-    
-    /////////Camera position updating: Nicholas
 
+    
+    /////////Camera position updating: --------------------------- Nicholas
 	trackingCam.lookAt(lander.getPosition());
-
 	downCam.setPosition(lander.getPosition());
 	downCam.lookAt(lander.getPosition() * ofVec3f(1, 0, 1));
 
@@ -287,7 +277,7 @@ void ofApp::update() {
 	float forward = lander.getPosition().x == 0 ? 1 : lander.getPosition().x;
 	frontCam.lookAt(ofVec3f(abs(forward), lander.getPosition().y, lander.getPosition().z) * ofVec3f(-2, 1, 1));
 
-	//Update textured lander location
+	//Update textured lander location - Nicholas
 	landerTextured.setPosition(lander.getPosition().x, lander.getPosition().y, lander.getPosition().z);
 }
 
@@ -333,8 +323,11 @@ void ofApp::draw() {
 	}
     
 	theCam->begin();
-    
 	ofPushMatrix();
+    
+    //Stephanie - draw the light
+    //keyLight.draw();
+    
 	if (bWireframe) {                    // wireframe mode  (include axis)
 		ofDisableLighting();
 		ofSetColor(ofColor::slateGray);
@@ -369,7 +362,7 @@ void ofApp::draw() {
         ofDrawSphere(selectedPoint, .1);
     }
     
-    //Debuf contact point
+    //Debug - contact point
     //Vector3 center2 = landerBox.center();
     //contactPointFront = ofVec3f(center2.x() - landerBox.length()/2, center2.y(), center2.z())    + lander.getPosition();
     //ofDrawSphere(contactPointFront, .9);
@@ -415,12 +408,14 @@ void ofApp::draw() {
     
     //--------------------------------------------------------- Draw glowing particles End - Stephanie
     
-    // Draw the bounding boxes - Stephanie
+    //////////////////// Draw the bounding boxes - Stephanie
     ofNoFill();
     ofSetColor(ofColor::white);
     drawBox(boundingBox);
-    drawMovingBox(landerBox, lander.getPosition());
-    //ofFill();  //important!!!! -Stephanie
+    if (bDrawBounding) {
+        drawMovingBox(landerBox, lander.getPosition());
+    }
+    //ofFill();  -Stephanie
     
     //////////////Draw either the whole octree or only the leaf nodes///////////////
     //myTree.drawLeafNodes(myTree.root);
@@ -433,18 +428,21 @@ void ofApp::draw() {
 	theCam->end();
 
     gui.draw();
-	// draw screen data
-	//Framerate
+    
+    
+    /////////////////////////// Draw screen data - Stephanie
+	
+    //Framerate
 	string str;
 	str += "Frame Rate: " + std::to_string(ofGetFrameRate());
 	ofSetColor(ofColor::white);
-	ofDrawBitmapString(str, ofGetWindowWidth() - 200, 15);
+	ofDrawBitmapString(str, ofGetWindowWidth() - 205, 15);
     
     //Altitude
     string str2;
     str2 += "Altitude (AGL): " + std::to_string(lander.getPosition().y);
     ofSetColor(ofColor::white);
-    ofDrawBitmapString(str2, ofGetWindowWidth() - 200, 30);
+    ofDrawBitmapString(str2, ofGetWindowWidth() - 205, 30);
     
 
 }
@@ -479,6 +477,10 @@ void ofApp::drawAxis(ofVec3f location) {
 void ofApp::keyPressed(int key) {
 
 	switch (key) {
+    case 'B':
+    case 'b':
+        toggleDrawBoundingBox();  //Stephanie
+        break;
 	case 'C':
 	case 'c':
 		if (cam.getMouseInputEnabled()) cam.disableMouseInput();
@@ -491,7 +493,7 @@ void ofApp::keyPressed(int key) {
 	case 'H':
 	case 'h':
 		break;
-        case 'i': {
+        case 'i': {  //Test impulse force - Stephanie
         ofVec3f vel = emitter.sys->particles[0].velocity;
         impulseForce -> apply(-60 * vel * (restitution + 1));
         }
@@ -521,13 +523,13 @@ void ofApp::keyPressed(int key) {
 		theCam = &cam;
 		break;
 	case OF_KEY_F2:
-		theCam = &trackingCam;
+		theCam = &trackingCam; //Nicholas
 		break;
 	case OF_KEY_F3:
-		theCam = &frontCam;
+		theCam = &frontCam;  //Nicholas
 		break;
 	case OF_KEY_F4:
-		theCam = &downCam;
+		theCam = &downCam;  //Nicholas
 		break;
 	case OF_KEY_ALT:
 		cam.enableMouseInput();
@@ -543,7 +545,7 @@ void ofApp::keyPressed(int key) {
         bCollision = false;
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-        turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5)); //Stephanie
+        turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1)); //Stephanie
         if (bCtrlKeyDown) {
             thrustForceLunar ->set(ofVec3f(0, 0, 4));
         }
@@ -561,7 +563,7 @@ void ofApp::keyPressed(int key) {
             bSoundPlaying = true;
             emitter.sys->reset();
             impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
-            turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5)); //Stephanie
+            turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1)); //Stephanie
             if (bCtrlKeyDown) {
                 thrustForceLunar ->set(ofVec3f(0, 0, -4));
             }
@@ -584,7 +586,7 @@ void ofApp::keyPressed(int key) {
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(-4, 0, 0));
-        if (!bCollision) {turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5));} //Stephanie
+        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));} //Stephanie
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -596,7 +598,7 @@ void ofApp::keyPressed(int key) {
         emitter.sys->reset();
         impulseForce -> set(ofVec3f(0, 0, 0)); //Reset the impulse force
         thrustForceLunar ->set(ofVec3f(4, 0, 0));
-        if (!bCollision) {turbForce -> set(ofVec3f(-0.5, -0.5, -0.5), ofVec3f(0.5, 0.5, 0.5));}  //Stephanie
+        if (!bCollision) {turbForce -> set(ofVec3f(-1, -1, -1), ofVec3f(1, 1, 1));}  //Stephanie
         engineEmitter.sys->reset();
         engineEmitter.start();
         engineEmitter2.sys->reset();
@@ -609,6 +611,11 @@ void ofApp::keyPressed(int key) {
 
 void ofApp::toggleWireframeMode() {
 	bWireframe = !bWireframe;
+}
+
+//Stephanie
+void ofApp::toggleDrawBoundingBox() {
+    bDrawBounding = !bDrawBounding;
 }
 
 
@@ -1028,6 +1035,18 @@ void ofApp::gotMessage(ofMessage msg){
 // setup basic ambient lighting in GL  (for now, enable just 1 light)
 //
 void ofApp::initLightingAndMaterials() {
+    
+    //Stephanie - Light setup
+    keyLight.setup();
+    keyLight.enable();
+    keyLight.setAreaLight(2, 5);
+    keyLight.setAmbientColor(ofColor(142, 233, 255));
+    keyLight.setDiffuseColor(ofColor(209, 245, 255));
+    keyLight.setSpecularColor(ofColor(226, 248, 255));
+
+    keyLight.rotate(-90, ofVec3f(1, 0, 0));
+    keyLight.rotate(-90, ofVec3f(0, 1, 0));
+    keyLight.setPosition(0, 7, 1);
 
 	static float ambient[] =
 	{ .5f, .5f, .5, 1.0f };
